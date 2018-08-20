@@ -122,6 +122,15 @@ def get_page_from_request(request, use_path=None):
     if draft and page and not user_can_change_page(request.user, page):
         page = get_page_from_path(path, preview, draft=False)
 
+    # Selects page depending on edit state
+    if request.session.get('cms_edit', False):
+        if not page:
+            page = get_page_from_path(path, preview, draft=True)
+        elif not page.publisher_is_draft:
+            page = page.publisher_draft
+    elif page and page.publisher_public_id:
+        page = page.publisher_public
+
     # For public pages we check if any parent is hidden due to published dates
     # In this case the selected page is not reachable
     if page and not draft:
